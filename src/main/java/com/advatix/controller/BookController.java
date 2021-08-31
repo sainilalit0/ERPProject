@@ -1,10 +1,11 @@
 package com.advatix.controller;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 import javax.validation.Valid;
-import javax.websocket.server.PathParam;
+import javax.validation.constraints.Min;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.advatix.commons.utils.Constant;
 import com.advatix.entities.Book;
@@ -40,11 +42,10 @@ public class BookController {
 	@Autowired
 	private BookService bookService;
 
-	@ApiOperation(value = "Get List Book", response = Book.class, httpMethod = "GET", notes = "Get List Book")	
+	@ApiOperation(value = "Get List Book", response = Book.class, httpMethod = "GET", notes = "Get List Book")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Get List Book", response = Book.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
 	@GetMapping("/getAllBooks")
 	@ResponseBody
 	public ResponseEntity<List<Book>> getAllBooks(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
@@ -60,32 +61,29 @@ public class BookController {
 	@ApiOperation(value = "Get Single Book", response = Book.class, httpMethod = "GET", notes = "Get Single Book")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Get single Book", response = Book.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
-	@GetMapping("/getBookById")
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
+	@GetMapping("/getBookById/{id}")
 	@ResponseBody
 	public ResponseEntity<Book> getBookById(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
-			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathParam("id") int id) {
+			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable @Min(1) int id) {
 		Book book = this.bookService.findById(id);
-		if (book == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
 		return ResponseEntity.of(Optional.of(book));
 	}
 
 	@ApiOperation(value = "Add Book", response = Book.class, httpMethod = "POST", notes = "Add Book")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Add Book", response = Book.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
 	@PostMapping("/AddBook")
 	@ResponseBody
 	public ResponseEntity<Book> addBook(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @Valid @RequestBody Book book) {
-		Book bookObject = null;
+		Book bookObject = new Book();
 		try {
 			bookObject = this.bookService.addBook(book);
-			return ResponseEntity.status(HttpStatus.CREATED).build();
+			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+					.buildAndExpand(bookObject.getId()).toUri();
+			return ResponseEntity.created(location).body(book);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -96,40 +94,27 @@ public class BookController {
 	@ApiOperation(value = "Delete Book", response = Book.class, httpMethod = "DELETE", notes = "Delete Book")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Delete Book", response = Book.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
 	@DeleteMapping("/deleteBook/{id}")
 	@ResponseBody
 	public ResponseEntity<String> deleteBook(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id) {
 
-		try {
-			this.bookService.deleteBookId(id);
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+		this.bookService.deleteBookId(id);
+		return ResponseEntity.ok().body("book deleted with success!");
 	}
 
 	@ApiOperation(value = "Update Book", response = Book.class, httpMethod = "PUT", notes = "Update Book")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Update Book", response = Book.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
 	@PutMapping("/updateBook/{id}")
 	@ResponseBody
 	public ResponseEntity<Book> updateBook(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id,
 			@RequestBody Book book) {
-
-		try {
-			this.bookService.updateBook(id, book);
-			return ResponseEntity.ok().body(book);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+		this.bookService.updateBook(id, book);
+		return ResponseEntity.ok().body(book);
 
 	}
 

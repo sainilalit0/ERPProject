@@ -1,7 +1,7 @@
 package com.advatix.service;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 import javax.transaction.Transactional;
 
@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.advatix.entities.Student;
+import com.advatix.exception.ResourceNotFoundException;
 import com.advatix.repository.StudentRepository;
 
 @Service
@@ -20,47 +21,48 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	@Transactional
 	public Student addStudent(Student student) {
+		if (Objects.isNull(student)) {
+			throw new ResourceNotFoundException(" input fields are not empty " + student + "Bad Request ");
+		}
 		return this.studentRepository.save(student);
+
 	}
 
 	@Override
 	@Transactional
 	public List<Student> listOfstudents() {
-		return this.studentRepository.findAll();
+		List<Student> listOfstudents = this.studentRepository.findAll();
+		if (listOfstudents.isEmpty()) {
+			throw new ResourceNotFoundException("while fetching all data from DB records not founds");
+		}
+		return listOfstudents;
 	}
 
 	@Override
 	@Transactional
 	public Student findStudentById(int id) {
-		//return this.studentRepository.findById(id).orElseThrow();
+		// return this.studentRepository.findById(id).orElseThrow();
 		// another approach
-		Optional<Student> result=this.studentRepository.findById(id);
-		Student student=null;
-		try {
-			if(result.isPresent()) {
-				student=result.get();
-			}
-			else {
-				throw new RuntimeException(" student id is not found "+id);
-			}
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return student;
+		Student theStudent = studentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Student with ID :" + id + " Not Found!"));
+		return theStudent;
 	}
 
 	@Override
 	@Transactional
 	public void updateStudent(int id, Student student) {
-		student.setStudentId(id);
+		Student theStudent = studentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Student with ID :" + id + " Not Found!"));
+		student.setStudentId(theStudent.getStudentId());
 		studentRepository.save(student);
 	}
 
 	@Override
 	@Transactional
 	public void deleteStudent(int id) {
-	studentRepository.deleteById(id);	
+		Student theStudent = studentRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Student with ID :" + id + " Not Found!"));
+		studentRepository.deleteById(theStudent.getStudentId());
 	}
 
 }

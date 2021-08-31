@@ -24,11 +24,11 @@ public class ProductInfo {
 	@Column(name = "id")
 	private int id;
 
-	@ApiModelProperty(notes = "Product name at least 2 character", required = true)
+	@ApiModelProperty(notes = "Product name at least 2 character", required = true,position = 1)
 	@Column(name = "product_name")
 	private String productName;
 
-	@ApiModelProperty(notes = "Product type: cold, Ambient, Frozen, Product", required = true)
+	@ApiModelProperty(notes = "Product type: cold, Ambient, Frozen, Product", required = true,position = 2)
 	@Column(name = "product_type")
 	private String productType;
 

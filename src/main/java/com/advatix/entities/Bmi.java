@@ -21,23 +21,23 @@ public class Bmi {
 	@Column(name = "id")
 	private int id;
 	
-	@ApiModelProperty(notes = "at least 2 character",required = true)
+	@ApiModelProperty(notes = "at least 2 character",required = true,position = 1)
 	@Column(name = "name")
 	@NotNull(message = "name is requried")
 	private String name;
 	
 
-	@ApiModelProperty(notes = "at least 2 number",required = true)
+	@ApiModelProperty(notes = "at least 2 number",required = true,position = 2)
 	@Column(name = "age")
 	@NotNull(message = "age is requried")
 	private int age;
 	
-	@ApiModelProperty(notes = "at least 2 and 3 number range",required = true)
+	@ApiModelProperty(notes = "at least 2 and 3 number range",required = true,position = 3)
 	@Column(name = "weight")
 	@NotNull(message = "weight canot be null required 1 or 2 number range\"")
 	private float weight;
 	
-	@ApiModelProperty(notes = "at least 2 number",required = true)
+	@ApiModelProperty(notes = "at least 2 number",required = true,position = 4)
 	@Column(name = "height")
 	@NotNull(message = "height canot be null required 1 or 2 number range")
 	private float height;	

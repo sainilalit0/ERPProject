@@ -1,7 +1,6 @@
 package com.advatix.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -9,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.advatix.entities.Book;
+import com.advatix.exception.ResourceNotFoundException;
 import com.advatix.repository.BookRepository;
 
 @Service
@@ -27,37 +27,31 @@ public class BookServiceImpl implements BookService {
 	@Override
 	@Transactional
 	public Book findById(int id) {
-		Optional<Book> result = bookRepository.findById(id);
-		Book book = null;
-		try {
-			if (result.isPresent()) {
-				book = result.get();
-			} else {
-				throw new RuntimeException(" Book id is not found" + id);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return book;
+		Book thBook = bookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Book with ID :" + id + " Not Found!"));
+		return thBook;
 	}
 
 	@Override
 	@Transactional
 	public Book addBook(Book book) {
-
 		return bookRepository.save(book);
 	}
 
 	@Override
 	@Transactional
 	public void deleteBookId(int id) {
-		bookRepository.deleteById(id);
+		Book thBook = bookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Book with ID :" + id + " Not Found!"));
+		bookRepository.deleteById(thBook.getId());
 	}
 
 	@Override
 	@Transactional
 	public Book updateBook(int id, Book book) {
-		book.setId(id);
+		Book thBook = bookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Book with ID :" + id + " Not Found!"));
+		book.setId(thBook.getId());
 		return bookRepository.save(book);
 
 	}

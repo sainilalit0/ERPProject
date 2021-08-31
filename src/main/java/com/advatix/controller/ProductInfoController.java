@@ -1,5 +1,6 @@
 package com.advatix.controller;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.advatix.commons.utils.Constant;
 import com.advatix.entities.ProductInfo;
@@ -52,6 +54,8 @@ public class ProductInfoController {
 
 		try {
 			productInfoObject = this.productInfoService.addProductDetails(productInfo);
+			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+					.buildAndExpand(productInfoObject.getId()).toUri();
 			return ResponseEntity.status(HttpStatus.CREATED).body(productInfoObject);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -86,10 +90,9 @@ public class ProductInfoController {
 			@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id) {
 		ProductInfo ProductInfo = this.productInfoService.findProductInfoById(id);
-		if (ProductInfo == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
-		return ResponseEntity.of(Optional.of(ProductInfo));
+
+		return ResponseEntity.ok().body(ProductInfo);
+
 	}
 
 	@ApiOperation(value = "Update ProductInfo", response = ProductInfo.class, httpMethod = "PUT", notes = "Update ProductInfo")
@@ -102,13 +105,9 @@ public class ProductInfoController {
 			@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id,
 			@RequestBody ProductInfo ProductInfo) {
-		try {
-			this.productInfoService.updateProductInfo(id, ProductInfo);
-			return ResponseEntity.ok().body(ProductInfo);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+		this.productInfoService.updateProductInfo(id, ProductInfo);
+		return ResponseEntity.ok().body(ProductInfo);
+
 	}
 
 	@ApiOperation(value = "Delete ProductInfo", response = ProductInfo.class, httpMethod = "DELETE", notes = "Delete ProductInfo")
@@ -119,13 +118,10 @@ public class ProductInfoController {
 	@ResponseBody
 	public ResponseEntity<String> deleteProductInfo(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id) {
-		try {
-			this.productInfoService.deleteProductInfo(id);
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+
+		this.productInfoService.deleteProductInfo(id);
+		return ResponseEntity.ok(" Product id is deleted successfully");
+
 	}
 
 }

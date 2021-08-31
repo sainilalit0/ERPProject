@@ -1,12 +1,16 @@
 package com.advatix.controller;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+
+import javax.validation.constraints.Min;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.advatix.commons.utils.Constant;
 import com.advatix.entities.Student;
@@ -28,6 +33,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+@CrossOrigin(origins = "http://localhost:8080")
 @RestController
 @RequestMapping(path = Constant.API_STUDENT)
 @Api(value = Constant.STUDENT_PATH, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE, tags = {
@@ -45,12 +51,12 @@ public class StudentController {
 	@ResponseBody
 	public ResponseEntity<Student> addStudent(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @RequestBody Student student) {
-		@SuppressWarnings("unused")
 		Student studentObject = new Student();
-
 		try {
 			studentObject = this.studentService.addStudent(student);
-			return ResponseEntity.status(HttpStatus.CREATED).build();
+			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+					.buildAndExpand(studentObject.getStudentId()).toUri();
+			return ResponseEntity.created(location).body(student);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -81,12 +87,9 @@ public class StudentController {
 	@GetMapping("/findStudentById/{id}")
 	@ResponseBody
 	public ResponseEntity<Student> findStudentById(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
-			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id) {
+			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable @Min(1) int id) {
 		Student student = this.studentService.findStudentById(id);
-		if (student == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
-		return ResponseEntity.of(Optional.of(student));
+		return ResponseEntity.ok().body(student);
 	}
 
 	@ApiOperation(value = "Update Student", response = Student.class, httpMethod = "PUT", notes = "Update Student")
@@ -98,13 +101,9 @@ public class StudentController {
 	public ResponseEntity<Student> updateStudent(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id,
 			@RequestBody Student student) {
-		try {
-			this.studentService.updateStudent(id, student);
-			return ResponseEntity.ok().body(student);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+		this.studentService.updateStudent(id, student);
+		return ResponseEntity.ok().body(student);
+
 	}
 
 	@ApiOperation(value = "Delete Student", response = Student.class, httpMethod = "DELETE", notes = "Delete Student")
@@ -114,13 +113,9 @@ public class StudentController {
 	@DeleteMapping("/deleteStudent/{id}")
 	@ResponseBody
 	public ResponseEntity<String> deleteStudent(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
-			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id) {
-		try {
-			this.studentService.deleteStudent(id);
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable(value = "id") int id) {
+		this.studentService.deleteStudent(id);
+		return ResponseEntity.ok().body("Student deleted with success!");
+
 	}
 }

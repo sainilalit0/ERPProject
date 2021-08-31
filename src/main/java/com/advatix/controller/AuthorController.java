@@ -1,9 +1,10 @@
 package com.advatix.controller;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-import javax.websocket.server.PathParam;
+import javax.validation.constraints.Min;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.advatix.commons.utils.Constant;
 import com.advatix.entities.Author;
@@ -42,9 +44,8 @@ public class AuthorController {
 	@ApiOperation(value = "Get Author", response = Author.class, httpMethod = "GET", notes = "Get All Author")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Get All", response = Author.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
-	@GetMapping("/ListOfAuthors")
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
+	@GetMapping("/listOfAuthors")
 	@ResponseBody
 	public ResponseEntity<List<Author>> getAllAuthor(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion) {
@@ -59,34 +60,30 @@ public class AuthorController {
 	@ApiOperation(value = "Get Author", response = Author.class, httpMethod = "GET", notes = "Find By Id")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Find By Id", response = Author.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
-	@GetMapping("/findAuthorById")
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
+	@GetMapping("/findAuthorById/{id}")
 	@ResponseBody
 	public ResponseEntity<Author> findAuthorById(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
-			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathParam("id") int id) {
-		Author author = this.authorService.findAuthorById(id);
-		if (author == null) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
-		return ResponseEntity.of(Optional.of(author));
-
+			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable @Min(1) int id) {
+		Author author = this.authorService.findAuthorById(id);		
+		return ResponseEntity.ok().body(author);
 	}
 
 	@ApiOperation(value = "Add Author", response = Author.class, httpMethod = "POST", notes = "Add Author")
 	@ApiResponses(value = { @ApiResponse(code = 201, message = "Add Author", response = Author.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
-	@PostMapping("/AddAuthor")
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
+	@PostMapping("/addAuthor")
 	@ResponseBody
 	public ResponseEntity<Author> AddAuthor(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @RequestBody Author author) {
-		Author authorObject = null;
+		Author authorObject = new Author();
 
 		try {
 			authorObject = this.authorService.AddAuthor(author);
-			return ResponseEntity.status(HttpStatus.CREATED).build();
+			URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+					.buildAndExpand(authorObject.getId()).toUri();
+			return ResponseEntity.created(location).body(author);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -96,38 +93,28 @@ public class AuthorController {
 	@ApiOperation(value = "Update Author", response = Author.class, httpMethod = "PUT", notes = "Update Author")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Update Author", response = Author.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
 	@PutMapping("/updateAuthor/{id}")
 	@ResponseBody
 	public ResponseEntity<Author> updateAuthor(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id,
-			@RequestBody Author author) {
-		try {
+			@RequestBody Author author) {		
 			this.authorService.updateAuthor(id, author);
 			return ResponseEntity.ok().body(author);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+		
 	}
 
 	@ApiOperation(value = "Delete Author", response = Author.class, httpMethod = "DELETE", notes = "Delete Author")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Delete Author", response = Author.class),
 			@ApiResponse(code = 500, message = "Internal Server Error"),
-            @ApiResponse(code = 404, message = "Not found"),
-            @ApiResponse(code = 401, message = "Not Authorized")})
+			@ApiResponse(code = 404, message = "Not found"), @ApiResponse(code = 401, message = "Not Authorized") })
 	@DeleteMapping("/deleteAuthor/{id}")
 	@ResponseBody
 	public ResponseEntity<String> deleteAuthor(@RequestHeader(name = Constant.DEVICE_TYPE) DeviceType deviceType,
 			@RequestHeader(name = Constant.APP_VERSION) String appVersion, @PathVariable int id) {
-		try {
+		
 			this.authorService.deleteAuthor(id);
-			return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
+			return ResponseEntity.ok().body("Author deleted with success!");		
 	}
 
 }

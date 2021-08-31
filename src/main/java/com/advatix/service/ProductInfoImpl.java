@@ -1,7 +1,6 @@
 package com.advatix.service;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.transaction.Transactional;
 
@@ -9,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.advatix.entities.ProductInfo;
+import com.advatix.exception.ResourceNotFoundException;
 import com.advatix.repository.ProductInfoRepository;
 
 @Service
@@ -58,32 +58,27 @@ public class ProductInfoImpl implements ProductInfoService {
 	@Override
 	@Transactional
 	public ProductInfo findProductInfoById(int id) {
-		Optional<ProductInfo> result = productInfoRepository.findById(id);
-		ProductInfo productInfo = null;
-		if (result.isPresent()) {
-			productInfo = result.get();
-		} else {
-			throw new RuntimeException("product id is not found" + id);
-		}
-		return productInfo;
+		ProductInfo productInfoId = productInfoRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Product with ID :" + id + " Not Found!"));
+		return productInfoId;
 	}
 
 	@Override
 	@Transactional
 	public void updateProductInfo(int id, ProductInfo productInfo) {
-
-		ProductInfo proInfo = findProductInfoById(id);
-		if (proInfo != null) {
-			productInfo.setId(id);
-			productInfoRepository.save(productInfo);
-		}
+		ProductInfo productInfoId = productInfoRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Product with ID :" + id + " Not Found!"));
+		productInfo.setId(productInfoId.getId());
+		productInfoRepository.save(productInfo);
 
 	}
 
 	@Override
 	@Transactional
 	public void deleteProductInfo(int id) {
-		productInfoRepository.deleteById(id);
+		ProductInfo productInfo = productInfoRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Product with ID :" + id + " Not Found!"));
+		productInfoRepository.deleteById(productInfo.getId());
 	}
 
 }
